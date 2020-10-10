@@ -1,0 +1,41 @@
+version: "3.3"
+
+services:
+  db:
+    image: mysql:5.7
+    volumes:
+      - db_data:/var/lib/mysql
+    restart: always
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: search
+      MYSQL_DATABASE: search
+      MYSQL_USER: search
+      MYSQL_PASSWORD: search
+
+  redisearch:
+    image: redislabs/redisearch:latest
+    ports:
+      - "6379:6379"
+    restart: always
+
+  search:
+    depends_on:
+      - db
+      - redisearch
+    build:
+      context: .
+      args:
+        - "./"
+    container_name: search
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./:/go/src/github.com/jalilbengoufa/go-search
+    restart: always
+    links:
+      - db
+      - redisearch
+volumes:
+  db_data: {}
