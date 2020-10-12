@@ -68,12 +68,24 @@ func Find(word string) (docs []redisearch.Document, total int, err error) {
 
 func Autocomplete(word string) (suggestions []redisearch.Suggestion, err error) {
 
-	suggestions, err = RedisAutocompleter.SuggestOpts("myAutocompleter", redisearch.SuggestOptions{Num: 5, WithScores: true, Fuzzy: true})
-	//TODO fix suggestions
+	suggestions, err = RedisAutocompleter.SuggestOpts(word, redisearch.SuggestOptions{Num: 5, WithScores: true, Fuzzy: true})
+
 	if err != nil {
 		log.Fatal(err)
 		return nil, err
 	}
 
 	return suggestions, nil
+}
+
+func SpellCheck(word string) (suggestions []redisearch.MisspelledTerm, total int, err error) {
+
+	suggestions, total, err = RedisConn.SpellCheck(redisearch.NewQuery(word), &redisearch.SpellCheckOptions{Distance: 4})
+
+	if err != nil {
+		log.Fatal(err)
+		return nil, 0, err
+	}
+
+	return suggestions, total, nil
 }

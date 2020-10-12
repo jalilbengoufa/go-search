@@ -32,17 +32,17 @@ func GetWord(c *gin.Context) {
 	wordController := word_controller.Word{ID: id}
 	exists, err := wordController.ExistByID()
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"status": e.ERROR_CHECK_EXIST_ARTICLE_FAIL})
+		c.JSON(http.StatusInternalServerError, gin.H{"status": e.ERROR_CHECK_EXIST_WORD_FAIL})
 		return
 	}
 	if !exists {
-		c.JSON(http.StatusOK, gin.H{"status": e.ERROR_NOT_EXIST_ARTICLE})
+		c.JSON(http.StatusOK, gin.H{"status": e.ERROR_NOT_EXIST_WORD})
 		return
 	}
 
 	word, err := wordController.Get()
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"status": e.ERROR_GET_ARTICLE_FAIL})
+		c.JSON(http.StatusInternalServerError, gin.H{"status": e.ERROR_GET_WORD_FAIL})
 		return
 	}
 
@@ -66,7 +66,7 @@ func AddWord(c *gin.Context) {
 		CreatedBy: form.CreatedBy,
 	}
 	if err := wordController.Add(); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"status": e.ERROR_ADD_ARTICLE_FAIL})
+		c.JSON(http.StatusInternalServerError, gin.H{"status": e.ERROR_ADD_WORD_FAIL})
 		return
 	}
 
@@ -86,7 +86,7 @@ func GetWords(c *gin.Context) {
 
 	words, err := wordController.GetAll()
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"status": e.ERROR_GET_ARTICLES_FAIL})
+		c.JSON(http.StatusInternalServerError, gin.H{"status": e.ERROR_GET_WORDS_FAIL})
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"status": e.SUCCESS, "data": words})
@@ -109,12 +109,20 @@ func FindWord(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"status": "not found"})
 		return
 	}
+	if total <= 0 {
+		spellCheckSuggestions, _, err := redis.SpellCheck(word)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"status": "not found"})
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{"status": e.SUCCESS, "data": docs, "spellCheck": spellCheckSuggestions})
+
+	}
 	c.JSON(http.StatusOK, gin.H{"status": e.SUCCESS, "data": docs, "total": total})
 
 }
 
 func Autocomplete(c *gin.Context) {
-
 	word := com.StrTo(c.Query("word")).String()
 	valid := validation.Validation{}
 	valid.Required(word, "word").Message("there must be a word to search for")
@@ -129,6 +137,16 @@ func Autocomplete(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"status": "not found"})
 		return
+	}
+
+	if len(suggestions) <= 0 {
+		spellCheckSuggestions, _, err := redis.SpellCheck(word)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"status": "not found"})
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{"status": e.SUCCESS, "data": suggestions, "spellCheck": spellCheckSuggestions})
+
 	}
 	c.JSON(http.StatusOK, gin.H{"status": e.SUCCESS, "data": suggestions})
 
