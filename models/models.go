@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/jinzhu/gorm"
-	_ "github.com/jinzhu/gorm/dialects/mysql"
+	"time"
 
 	"github.com/jalilbengoufa/go-search/pkg/setting"
-	"time"
+	"github.com/jinzhu/gorm"
+	_ "github.com/jinzhu/gorm/dialects/mysql"
 )
 
 var db *gorm.DB
@@ -19,7 +19,6 @@ type Model struct {
 	ModifiedOn int `json:"modified_on"`
 	DeletedOn  int `json:"deleted_on"`
 }
-
 
 func Setup() {
 	var err error
@@ -43,7 +42,9 @@ func Setup() {
 	db.Callback().Delete().Replace("gorm:delete", deleteCallback)
 	db.DB().SetMaxIdleConns(10)
 	db.DB().SetMaxOpenConns(100)
-	defer db.Close()
+
+	db.AutoMigrate(&Word{})
+
 }
 
 // updateTimeStampForCreateCallback will set `CreatedOn`, `ModifiedOn` when creating
@@ -100,6 +101,7 @@ func deleteCallback(scope *gorm.Scope) {
 		}
 	}
 }
+
 // addExtraSpaceIfExist adds a separator
 func addExtraSpaceIfExist(str string) string {
 	if str != "" {

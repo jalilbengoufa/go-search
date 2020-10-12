@@ -3,23 +3,25 @@ package setting
 import (
 	"log"
 	"time"
+
 	"github.com/go-ini/ini"
 )
 
 type App struct {
 	PrefixUrl string
 
-	LogSavePath string
-	LogSaveName string
-	LogFileExt  string
-	TimeFormat  string
+	LogSavePath     string
+	LogSaveName     string
+	LogFileExt      string
+	TimeFormat      string
+	RuntimeRootPath string
 }
 
 var AppSetting = &App{}
 
 type Server struct {
-	RunMode      string
-	HttpPort     int
+	RunMode  string
+	HttpPort int
 }
 
 var ServerSetting = &Server{}
@@ -46,7 +48,6 @@ type Redisearch struct {
 var RedisearchSetting = &Redisearch{}
 
 var cfg *ini.File
-
 
 func Setup() {
 	var err error

@@ -27,7 +27,7 @@ services:
     build:
       context: .
       args:
-        - "./"
+        app_env: "./"
     container_name: search
     ports:
       - "8080:8080"
